@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drum Machine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const DrumMachine = () => {
+            const [power, setPower] = useState(true);
+            const [volume, setVolume] = useState(50);
+            const [displayText, setDisplayText] = useState('Ready');
+            const [bank, setBank] = useState(false);
+            const [activePad, setActivePad] = useState(null);
+
+            const bank1 = [
+                { id: 'Q', keyCode: 81, src: 'https://s3.amazonaws.com/freecodecamp/drums/Heater-1.mp3', name: 'Heater 1' },
+                { id: 'W', keyCode: 87, src: 'https://s3.amazonaws.com/freecodecamp/drums/Heater-2.mp3', name: 'Heater 2' },
+                { id: 'E', keyCode: 69, src: 'https://s3.amazonaws.com/freecodecamp/drums/Heater-3.mp3', name: 'Heater 3' },
+                { id: 'A', keyCode: 65, src: 'https://s3.amazonaws.com/freecodecamp/drums/Heater-4_1.mp3', name: 'Heater 4' },
+                { id: 'S', keyCode: 83, src: 'https://s3.amazonaws.com/freecodecamp/drums/Heater-6.mp3', name: 'Clap' },
+                { id: 'D', keyCode: 68, src: 'https://s3.amazonaws.com/freecodecamp/drums/Dsc_Oh.mp3', name: 'Open HH' },
+                { id: 'Z', keyCode: 90, src: 'https://s3.amazonaws.com/freecodecamp/drums/Kick_n_Hat.mp3', name: 'Kick n Hat' },
+                { id: 'X', keyCode: 88, src: 'https://s3.amazonaws.com/freecodecamp/drums/RP4_KICK_1.mp3', name: 'Kick' },
+                { id: 'C', keyCode: 67, src: 'https://s3.amazonaws.com/freecodecamp/drums/Cev_H2.mp3', name: 'Closed HH' }
+            ];
+
+            const bank2 = [
+                { id: 'Q', keyCode: 81, src: 'https://s3.amazonaws.com/freecodecamp/drums/Chord_1.mp3', name: 'Chord 1' },
+                { id: 'W', keyCode: 87, src: 'https://s3.amazonaws.com/freecodecamp/drums/Chord_2.mp3', name: 'Chord 2' },
+                { id: 'E', keyCode: 69, src: 'https://s3.amazonaws.com/freecodecamp/drums/Chord_3.mp3', name: 'Chord 3' },
+                { id: 'A', keyCode: 65, src: 'https://s3.amazonaws.com/freecodecamp/drums/Give_us_a_light.mp3', name: 'Shaker' },
+                { id: 'S', keyCode: 83, src: 'https://s3.amazonaws.com/freecodecamp/drums/Dry_Ohh.mp3', name: 'Open HH' },
+                { id: 'D', keyCode: 68, src: 'https://s3.amazonaws.com/freecodecamp/drums/Bld_H1.mp3', name: 'Closed HH' },
+                { id: 'Z', keyCode: 90, src: 'https://s3.amazonaws.com/freecodecamp/drums/punchy_kick_1.mp3', name: 'Punchy Kick' },
+                { id: 'X', keyCode: 88, src: 'https://s3.amazonaws.com/freecodecamp/drums/side_stick_1.mp3', name: 'Side Stick' },
+                { id: 'C', keyCode: 67, src: 'https://s3.amazonaws.com/freecodecamp/drums/Brk_Snr.mp3', name: 'Snare' }
+            ];
+
+            const currentBank = bank ? bank2 : bank1;
+
+            const playSound = (id) => {
+                if (!power) return;
+                
+                const audio = document.getElementById(id);
+                audio.currentTime = 0;
+                audio.volume = volume / 100;
+                audio.play();
+                
+                const pad = currentBank.find(pad => pad.id === id);
+                setDisplayText(pad.name);
+                setActivePad(id);
+                
+                setTimeout(() => {
+                    setActivePad(null);
+                }, 100);
+            };
+
+            const handleKeyPress = (e) => {
+                if (!power) return;
+                
+                const key = e.key.toUpperCase();
+                const pad = currentBank.find(pad => pad.id === key);
+                
+                if (pad) {
+                    playSound(key);
+                }
+            };
+
+            const togglePower = () => {
+                setPower(!power);
+                setDisplayText(power ? 'Power Off' : 'Power On');
+                setTimeout(() => {
+                    setDisplayText(power ? '' : 'Ready');
+                }, 1000);
+            };
+
+            const toggleBank = () => {
+                if (!power) return;
+                setBank(!bank);
+                setDisplayText(bank ? 'Heater Kit' : 'Smooth Piano Kit');
+            };
+
+            const handleVolumeChange = (e) => {
+                if (!power) return;
+                const newVolume = e.target.value;
+                setVolume(newVolume);
+                setDisplayText(`Volume: ${newVolume}`);
+                setTimeout(() => {
+                    setDisplayText('');
+                }, 1000);
+            };
+
+            useEffect(() => {
+                document.addEventListener('keydown', handleKeyPress);
+                return () => {
+                    document.removeEventListener('keydown', handleKeyPress);
+                };
+            }, [power, volume, bank]);
+
+            return (
+                <div className="max-w-2xl w-full bg-gray-800 rounded-xl p-6 shadow-2xl border-2 border-gray-700">
+                    <div className="flex flex-col md:flex-row gap-6">
+                        {/* Drum Pads */}
+                        <div className="grid grid-cols-3 gap-3 flex-1">
+                            {currentBank.map((pad) => (
+                                <button
+                                    key={pad.id}
+                                    id={`pad-${pad.id}`}
+                                    className={`drum-pad bg-gray-700 text-white text-xl font-bold py-8 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-600 ${activePad === pad.id ? 'active' : ''}`}
+                                    onClick={() => playSound(pad.id)}
+                                    disabled={!power}
+                                >
+                                    {pad.id}
+                                    <audio
+                                        id={pad.id}
+                                        className="clip"
+                                        src={pad.src}
+                                        preload="auto"
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {/* Controls */}
+                        <div className="flex flex-col justify-between w-full md:w-64">
+                            {/* Power */}
+                            <div className="flex items-center justify-between mb-6">
+                                <span className="text-white font-medium">Power</span>
+                                <button
+                                    className={`power-button ${power ? 'on' : 'off'}`}
+                                    onClick={togglePower}
+                                >
+                                    <div className={`power-slider ${power ? 'on' : 'off'}`}></div>
+                                </button>
+                            </div>
+                            
+                            {/* Display */}
+                            <div className="display p-3 mb-6 text-center min-h-12 flex items-center justify-center">
+                                <span className={`text-lg ${power ? '' : 'text-gray-500'}`}>
+                                    {power ? displayText || 'Ready' : 'OFF'}
+                                </span>
+                            </div>
+                            
+                            {/* Volume */}
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-white font-medium">Volume</span>
+                                    <i className="fas fa-volume-up text-white"></i>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={volume}
+                                    onChange={handleVolumeChange}
+                                    className="volume-slider"
+                                    disabled={!power}
+                                />
+                            </div>
+                            
+                            {/* Bank */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-white font-medium">Bank</span>
+                                <button
+                                    className={`power-button ${bank ? 'on' : 'off'}`}
+                                    onClick={toggleBank}
+                                    disabled={!power}
+                                >
+                                    <div className={`power-slider ${bank ? 'on' : 'off'}`}></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Footer */}
+                    <div className="mt-6 text-center text-gray-400 text-sm">
+                        <p>Press keys QWERASDZXC or click pads to play sounds</p>
+                        <p className="mt-1">Made with React & TailwindCSS</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <div className="container mx-auto px-4">
+                    <DrumMachine />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
